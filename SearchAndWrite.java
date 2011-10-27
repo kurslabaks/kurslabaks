@@ -1,7 +1,3 @@
-package tweeter;
-
-// Import io so we can use file objects
-
 import java.util.*;
 import java.io.*;
 
@@ -14,14 +10,18 @@ public class SearchAndWrite {
         System.out.println("Searching for '" + userString + "' in file...");
         BufferedReader bf = openReadFile();
         BufferedWriter fw = openWriteFile();
-        searchInFileForUserString(bf, fw, userString);
+        String line = readLine(bf);
         
-        while (bf != null) {
-            int indexFound = findexFound(foundLine, userString);
+        while (line != null) {
+            int indexFound = checkLineAndFoundIndex(line, userString);
             if (indexFound > -1) {
-                fw.write(foundLine + "\n");
+                writeFoundLineInFile(fw, line);
+                count++;
             }
+            line = readLine(bf);
         }
+        
+        writeUserStringAndFoundedLinesQuantity(fw, userString, count);
         
         closeFiles(bf, fw);
         
@@ -35,7 +35,7 @@ public class SearchAndWrite {
     }
     
     public static BufferedReader openReadFile() throws FileNotFoundException, IOException {
-	BufferedReader bf = new BufferedReader(new FileReader("/Users/Andrey/Downloads/1_milj_tw_test.txt"));
+	BufferedReader bf = new BufferedReader(new FileReader("/Users/Andrey/Downloads/1_milj_tw.txt"));
         return bf;
     }
     
@@ -44,23 +44,18 @@ public class SearchAndWrite {
         return fw;
     }
     
-    public static void searchInFileForUserString(BufferedReader bf, BufferedWriter fw, String userString) throws IOException {
-        String foundLine;
-        while (( foundLine = bf.readLine()) != null) {
-            int indexfound = foundLine.indexOf(userString);
-            if (indexfound > -1) {
-                fw.write(foundLine + "\n");
-            }
-        }
+    public static String readLine(BufferedReader bf) throws IOException {
+        String line = bf.readLine();
+        return line;
     }
     
-    public static int indexFound(String foundLine, String userString) {
-        int indexFound = foundLine.indexOf(userString);
+    public static int checkLineAndFoundIndex(String line, String userString) {
+        int indexFound = line.indexOf(userString);
         return indexFound;
     }
     
-    public static void writeFoundLineInFile(BufferedWriter fw, String foundLine) throws IOException {
-        fw.write(foundLine + "\n");
+    public static void writeFoundLineInFile(BufferedWriter fw, String line) throws IOException {
+        fw.write(line + "\n");
     }
     
     public static void writeUserStringAndFoundedLinesQuantity(BufferedWriter fw, String userString, int count) throws IOException {
@@ -73,39 +68,3 @@ public class SearchAndWrite {
         fw.close();
     }
 }
-
-/*
- *         
-        ArrayList al = new ArrayList();
-        
-        System.out.print("Type a string: ");
-        Scanner sc = new Scanner(System.in);
-        String userString = sc.nextLine();
-
-	System.out.println("Searching for '" + userString + "' in file...");
-        
-        while (( line = bf.readLine()) != null) {
-            linecount++;
-            int indexfound = line.indexOf(userString);
-            if (indexfound > -1) {
-                fw.write(line + "\n");
-                al.add(line);
-                count++;
-            }
-	}
-	
-        al.add(userString);
-        fw.write(userString + "\n");
-        al.add(count);
-        fw.write(count + "\n\n");
-
-	bf.close();
-        fw.close();
-        
-        for (int i = 0; i < al.size(); i++)
-        {
-            System.out.println(al.get(i));
-        }
-    
-    }
- */
