@@ -1,0 +1,103 @@
+/* Main */
+
+html { 		
+	height: 100%; 
+	overflow-y: scroll;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: url(/grupa2/images/bg-texture.png);
+	font-family: "Tahoma", sans-serif;
+	width: 1000px;
+	margin: 0px auto;
+	color: white;
+}
+
+a	{
+	color: white;
+}
+
+/* Header */
+
+#header ul li {
+	margin-left: 10px;
+	display: inline;
+}
+
+#header {
+	margin: 30px 0 0 0;
+	padding: 0;
+	text-align: center;
+}
+
+#category_name {
+	margin: 30px 0 0 0;
+	padding: 0;
+	text-align: center;
+}
+
+/* Content */
+
+.content {
+
+}
+
+/* Charts */
+
+#diagram_box {
+	height: 350px;
+	display: table;
+}
+
+#row {
+	display: table-row; 
+	position: relative;
+}
+
+.brand_value {
+	width: 125px;
+	display: table-cell; 
+	vertical-align: bottom; 
+	position: relative;
+}
+
+.brand_value div {
+	background: url(/grupa2/images/column_full_bkg.png); 
+	width: 50px;
+	margin: 0px auto;
+	height: 10px;
+}
+
+.brand_value .thumb {
+    background-image: url(/grupa2/images/column_full_bkg.png); 
+    background-position: right bottom; 
+    background-repeat: no-repeat; 
+	height: 20px;	
+}
+
+#diagram_box p {
+	padding: 15px 0px 0px 0px;
+	text-align: center;
+	font-size: 8pt;
+	color: grey;
+	width: 40px;
+	margin: 0;
+}
+
+#brand_names {
+	padding: 0;
+	height: 100px;
+	font-size: 14pt;
+	border-top: 1px solid white;
+}
+
+.brand_name {
+	margin-top: 10px;
+	width: 125px;
+	text-align: center; 
+	float: left;
+}
+
+
