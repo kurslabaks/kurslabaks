@@ -1,86 +1,99 @@
 package twitter;
 
-import java.util.*;
-import java.io.*;
+import java.sql.*;
+import java.text.ParseException;
+import twitter4j.*;
 
-public class SearchAndWrite {
+import com.cybozu.labs.langdetect.Detector;
+import com.cybozu.labs.langdetect.DetectorFactory;
+import com.cybozu.labs.langdetect.LangDetectException;
+import java.text.DateFormat;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+
+public class SearchMethod {
+    public static void main (String args[]) throws TwitterException, SQLException, LangDetectException, ParseException {
+        
+        DetectorFactory.loadProfile("/Users/Andrey/Downloads/langdetect-09-13-2011/profiles/");
     
-    public static void main(String args[]) throws FileNotFoundException, IOException {
-        int count = 0;
-        String str;
-        ArrayList al = new ArrayList();
+        Connection conn = DriverManager.getConnection(
+            "jdbc:mysql://localhost/grupa2?useUnicode=yes&characterEncoding=utf8",
+            "group2", "PU7CKJc8M7LwGzUc"
+        );
         
-        String userString = getStringFromUser();
-        System.out.println("Searching for '" + userString + "' in file...");
-        BufferedReader bf = openReadFile();
-        BufferedWriter fw = openWriteFile();
-        String line = readLine(bf);
+        int n = 0;
         
-        while (line != null) {
-            int indexFound = checkLineAndFoundIndex(line, userString);
-            if (indexFound > -1) {
-                //writeFoundLineInFile(fw, line);
-                writeFoundLineInArrayList(fw, line, al);
-                count++;
+        Statement selectDate = conn.createStatement();
+        ResultSet rs = selectDate.executeQuery("SELECT MAX(date) FROM tweet");
+        rs.next();
+        String getDate = rs.getString("MAX(date)");
+        
+        Statement select = conn.createStatement();
+        ResultSet select_result = select.executeQuery("SELECT id, text FROM brand WHERE parent_id!='NULL' AND parent_id!=0");
+
+        while (select_result.next()){
+            int id = select_result.getInt(1);
+            String text = '"' + select_result.getString(2) + '"';
+            n = searchForTwits(id, text, conn, getDate);
+            System.out.println(n);
+        }
+        
+        conn.close();
+        
+    } 
+    
+    public static int searchForTwits(int id, String text, Connection conn, String getDate) throws TwitterException, SQLException, LangDetectException, ParseException {
+        Twitter twitter = new TwitterFactory().getInstance();
+        int countTweets = 0;
+        int pageNumber = 1;
+        int n=0;
+
+        
+        do {
+            Query query = new Query(text).rpp(100).page(pageNumber);
+            QueryResult result = twitter.search(query);
+            for (Tweet tweet : result.getTweets()) {
+                
+                
+                java.util.Date date = tweet.getCreatedAt();
+                Format formatter;
+                formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String newDate = formatter.format(date);
+                
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                java.util.Date oldDate = df.parse(getDate);
+                
+                Statement input = conn.createStatement();
+                
+                countTweets++;
+                
+                if (date.after(oldDate)) {
+                    Detector detector = DetectorFactory.create();
+                    detector.append(tweet.getText());
+                    String lang;
+                    try {
+                        lang = detector.detect();
+
+                            if (lang.equals("lv") || lang.equals("ru")) {
+                                try {
+                                    input.executeUpdate("INSERT INTO tweet " + "VALUES (null, '" + tweet.getId() + "', '" + tweet.getFromUser() + "', '" + tweet.getText().replace("'", "&rsquo;") + "', '" + newDate + "', null, null, null)");
+                                    input.executeUpdate("INSERT INTO tweet_brand " + "VALUES (null, '" + tweet.getId() + "', '" + id + "')");
+                                } 
+                                catch (SQLException ex) {}
+                                n++;
+                            }
+                            else continue;
+                            
+                    } catch (LangDetectException ex) {}
+                }
+                else continue;
             }
-            line = readLine(bf);
-        }
+            pageNumber++;
+            if (countTweets == 100) countTweets = 0;
+            else break;
+        }while (pageNumber != 16);
         
-        writeUserStringAndFoundedLinesQuantity(fw, userString, count);
-        
-        for (int i = 0; i < al.size(); i++) {
-            str = (String) al.get(i);
-            writeFoundLineInFile(fw, str);
-        }
-        
-        System.out.println(count);
-        
-        closeFiles(bf, fw);
-        
-    }
-    
-    public static String getStringFromUser() {
-        System.out.print("Type a string: ");
-        Scanner sc = new Scanner(System.in, "UTF-8");
-        String userString = sc.nextLine();
-        return userString;
-    }
-    
-    public static BufferedReader openReadFile() throws FileNotFoundException, IOException {
-	BufferedReader bf = new BufferedReader(new FileReader("/Users/Andrey/Downloads/1_milj_tw.txt"));
-        return bf;
-    }
-    
-    public static BufferedWriter openWriteFile() throws FileNotFoundException, IOException {
-        BufferedWriter fw = new BufferedWriter(new FileWriter("/Users/Andrey/Downloads/1_milj_tw_filtered.txt", true));
-        return fw;
-    }
-    
-    public static String readLine(BufferedReader bf) throws IOException {
-        String line = bf.readLine();
-        return line;
-    }
-    
-    public static int checkLineAndFoundIndex(String line, String userString) {
-        int indexFound = line.indexOf(userString);
-        return indexFound;
-    }
-    
-    public static void writeFoundLineInArrayList(BufferedWriter fw, String line, ArrayList al) throws IOException {
-        al.add(line);
-    }
-    
-    public static void writeFoundLineInFile(BufferedWriter fw, String str) throws IOException {
-        fw.write(str + "\n");
-    }
-    
-    public static void writeUserStringAndFoundedLinesQuantity(BufferedWriter fw, String userString, int count) throws IOException {
-        fw.write(userString + "\n");
-        fw.write(count + "\n");
-    }
-
-    public static void closeFiles(BufferedReader bf, BufferedWriter fw) throws IOException {
-        bf.close();
-        fw.close();
+        System.out.print(text + " ");
+        return n;
     }
 }
